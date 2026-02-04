@@ -1,0 +1,27 @@
+﻿using Prakrishta.Data.Bulk.Core;
+using Prakrishta.Data.Bulk.Diagnostics;
+using Prakrishta.Data.Bulk.Pipeline.StrategySelector;
+
+namespace Prakrishta.Data.Bulk.Pipeline.Steps
+{
+    public sealed class StrategySelectionStep : IBulkPipelineStep
+    {
+        private readonly BulkStrategySelector _selector;
+        private readonly IBulkDiagnosticsSink _diagnostics;
+
+        public string Name => "StrategySelection";
+
+        public StrategySelectionStep(BulkStrategySelector selector, IBulkDiagnosticsSink diagnostics)
+        {
+            _selector = selector;
+            _diagnostics = diagnostics;
+        }
+
+        public Task ExecuteAsync(BulkContext context, CancellationToken cancellationToken)
+        {
+            context.StrategyKind = _selector.Select(context);
+            _diagnostics.OnStrategySelected(context);
+            return Task.CompletedTask;
+        }
+    }
+}

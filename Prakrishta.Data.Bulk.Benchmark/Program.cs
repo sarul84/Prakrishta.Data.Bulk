@@ -1,15 +1,17 @@
-﻿using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Running;
 
-namespace Prakrishta.Data.Bulk.Benchmarks
+internal class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
-        {
-            BenchmarkSwitcher.FromAssemblies(new[]
-            {
-            typeof(Program).Assembly
-        }).Run(args);
-        }
+        var config = ManualConfig
+            .CreateEmpty()
+            .WithOptions(ConfigOptions.DisableOptimizationsValidator)
+            .WithOptions(ConfigOptions.JoinSummary);
+
+        BenchmarkSwitcher
+            .FromAssembly(typeof(Program).Assembly)
+            .Run(args, config);
     }
 }

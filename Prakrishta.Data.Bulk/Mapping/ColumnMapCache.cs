@@ -30,31 +30,37 @@ public static class ColumnMapCacheOld
         }
 
         return maps.ToArray();
-    }
+    }    
+}
 
-    public static class ColumnMapCache
+public static class ColumnMapCache
+{
+    private static readonly ConcurrentDictionary<Type, ColumnMap[]> _cache = new();
+
+    public static ColumnMap[] Get(Type type) => _cache.GetOrAdd(type, Build);
+
+    private static ColumnMap[] Build(Type type)
     {
-        private static readonly ConcurrentDictionary<Type, ColumnMap[]> _cache = new();
+        var props = type
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanRead)
+            .ToArray();
 
-        public static ColumnMap[] Get(Type type) => _cache.GetOrAdd(type, Build);
+        var maps = new List<ColumnMap>(props.Length);
 
-        private static ColumnMap[] Build(Type type)
+        foreach (var prop in props)
         {
-            var props = type
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanRead)
-                .ToArray();
+            var getter = IlGetterFactory.CreateGetter(prop);
 
-            var maps = new List<ColumnMap>(props.Length);
-
-            foreach (var prop in props)
+            maps.Add(new ColumnMap
             {
-                var getter = IlGetterFactory.CreateGetter(prop);
-                
-                maps.Add(new ColumnMap());
-            }
-
-            return maps.ToArray();
+                ColumnName = prop.Name,
+                ColumnType = prop.PropertyType,
+                Getter = getter,
+                IsKey = prop.Name.Equals("Id", StringComparison.OrdinalIgnoreCase)
+            });
         }
+
+        return maps.ToArray();
     }
 }

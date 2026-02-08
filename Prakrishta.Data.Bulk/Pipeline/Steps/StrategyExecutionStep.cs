@@ -1,8 +1,8 @@
-﻿using Prakrishta.Data.Bulk.Core;
-using Prakrishta.Data.Bulk.Enum;
-
-namespace Prakrishta.Data.Bulk.Pipeline.Steps
+﻿namespace Prakrishta.Data.Bulk.Pipeline.Steps
 {
+    using Prakrishta.Data.Bulk.Core;
+    using Prakrishta.Data.Bulk.Enum;
+
     public sealed class StrategyExecutionStep : IBulkPipelineStep
     {
         private readonly IReadOnlyDictionary<BulkStrategyKind, IBulkStrategy> _strategies;

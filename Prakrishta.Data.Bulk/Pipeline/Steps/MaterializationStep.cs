@@ -1,8 +1,8 @@
-﻿using Prakrishta.Data.Bulk.Core;
-using Prakrishta.Data.Bulk.Mapping;
-
-namespace Prakrishta.Data.Bulk.Pipeline.Steps
+﻿namespace Prakrishta.Data.Bulk.Pipeline.Steps
 {
+    using Prakrishta.Data.Bulk.Core;
+    using Prakrishta.Data.Bulk.Mapping;
+
     public sealed class MaterializationStep : IBulkPipelineStep
     {
         public string Name => "Materialization";
@@ -14,7 +14,8 @@ namespace Prakrishta.Data.Bulk.Pipeline.Steps
 
             context.Properties["List"] = list;
 
-            var maps = ColumnMapCacheOld.Get(context.EntityType);
+            var maps = ColumnMapCache.Get(context.EntityType);
+
             context.Properties["ColumnMaps"] = maps;
 
             context.ItemCount = list.Count;

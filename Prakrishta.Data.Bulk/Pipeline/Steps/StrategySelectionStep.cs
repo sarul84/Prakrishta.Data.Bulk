@@ -1,9 +1,9 @@
-﻿using Prakrishta.Data.Bulk.Core;
-using Prakrishta.Data.Bulk.Diagnostics;
-using Prakrishta.Data.Bulk.Pipeline.StrategySelector;
-
-namespace Prakrishta.Data.Bulk.Pipeline.Steps
+﻿namespace Prakrishta.Data.Bulk.Pipeline.Steps
 {
+    using Prakrishta.Data.Bulk.Core;
+    using Prakrishta.Data.Bulk.Diagnostics;
+    using Prakrishta.Data.Bulk.Pipeline.StrategySelector;
+
     public sealed class StrategySelectionStep : IBulkPipelineStep
     {
         private readonly BulkStrategySelector _selector;

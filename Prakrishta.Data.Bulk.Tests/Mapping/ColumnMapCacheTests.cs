@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using static Prakrishta.Data.Bulk.Mapping.ColumnMapCacheOld;
+using Prakrishta.Data.Bulk.Mapping;
 
 namespace Prakrishta.Data.Bulk.Tests.Mapping;
 

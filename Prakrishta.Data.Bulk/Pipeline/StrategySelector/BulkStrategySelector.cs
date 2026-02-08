@@ -3,7 +3,7 @@ using Prakrishta.Data.Bulk.Enum;
 
 namespace Prakrishta.Data.Bulk.Pipeline.StrategySelector
 {
-    public sealed class BulkStrategySelector(BulkOptions options)
+    public class BulkStrategySelector(BulkOptions options)
     {
         private readonly BulkOptions _options = options;
 

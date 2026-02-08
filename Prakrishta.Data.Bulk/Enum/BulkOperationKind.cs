@@ -5,6 +5,7 @@
         Insert,
         Update,
         Delete,
-        Upsert
+        Upsert,
+        ReplacePartition
     }
 }

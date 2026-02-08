@@ -67,5 +67,10 @@ namespace Prakrishta.Data.Bulk
 
             return _pipeline.ExecuteAsync(context, cancellationToken);
         }
+
+        internal Task<int> ExecuteAsync(BulkContext context, CancellationToken cancellationToken)
+        {
+            return _pipeline.ExecuteAsync(context, cancellationToken);
+        }
     }
 }

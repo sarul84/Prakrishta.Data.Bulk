@@ -4,6 +4,7 @@
     {
         StoredProcedureTvp,
         StagingTable,
-        TruncateAndReload
+        TruncateAndReload,
+        PartitionSwitch
     }
 }

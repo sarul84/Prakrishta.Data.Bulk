@@ -1,9 +1,9 @@
-﻿using Prakrishta.Data.Bulk.Core;
-using Prakrishta.Data.Bulk.Diagnostics;
-using System.Diagnostics;
-
-namespace Prakrishta.Data.Bulk.Pipeline
+﻿namespace Prakrishta.Data.Bulk.Pipeline
 {
+    using Prakrishta.Data.Bulk.Core;
+    using Prakrishta.Data.Bulk.Diagnostics;
+    using System.Diagnostics;
+
     public sealed class BulkPipelineEngine(
         IEnumerable<IBulkPipelineStep> steps,
         IBulkDiagnosticsSink? diagnostics = null): IBulkPipeline

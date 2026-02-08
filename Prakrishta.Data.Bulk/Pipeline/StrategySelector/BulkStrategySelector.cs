@@ -9,6 +9,12 @@ namespace Prakrishta.Data.Bulk.Pipeline.StrategySelector
 
         public BulkStrategyKind Select(BulkContext context)
         {
+            if (context.StrategyKind == BulkStrategyKind.PartitionSwitch)
+                return BulkStrategyKind.PartitionSwitch;
+
+            if (context.OperationKind == BulkOperationKind.ReplacePartition)
+                return BulkStrategyKind.PartitionSwitch;
+
             if (context.OperationKind == BulkOperationKind.Insert 
                 && context.ItemCount >= _options.StagingThreshold)
                 return BulkStrategyKind.StagingTable;

@@ -1,8 +1,9 @@
-﻿using Prakrishta.Data.Bulk.Mapping;
-using System.Data;
-
-namespace Prakrishta.Data.Bulk.Extensions
+﻿namespace Prakrishta.Data.Bulk.Extensions
 {
+    using Prakrishta.Data.Bulk.Internals;
+    using Prakrishta.Data.Bulk.Mapping;
+    using System.Data;
+
     public static class IEnumerableExtensions
     {
         public static DataTable ToDataTable(this IEnumerable<object> items, ColumnMap[] maps)
@@ -12,19 +13,16 @@ namespace Prakrishta.Data.Bulk.Extensions
             foreach (var map in maps)
             {
                 var type = map.ColumnType;
+                bool isNullable = type.IsNullableValueType();
 
-                bool isNullableValueType =
-                    type.IsGenericType &&
-                    type.GetGenericTypeDefinition() == typeof(Nullable<>);
-
-                if (isNullableValueType)
+                if (isNullable)
                 {
-                    type = Nullable.GetUnderlyingType(type)!;
+                    type = type.GetUnderlyingType()!;
                 }
 
                 var column = new DataColumn(map.ColumnName, type);
 
-                column.AllowDBNull = isNullableValueType || !type.IsValueType;
+                column.AllowDBNull = isNullable || !type.IsValueType;
 
                 table.Columns.Add(column);
             }
@@ -41,5 +39,7 @@ namespace Prakrishta.Data.Bulk.Extensions
 
             return table;
         }
+
+        
     }
 }

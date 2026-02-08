@@ -2,8 +2,9 @@
 {
     public enum BulkOperationStrategy
     {
-        StoredProcedure,   // TVP + proc (current)
-        StagingTable,       // SqlBulkCopy + set-based UPDATE/DELETE
-        TruncateAndReload
+        StoredProcedure,
+        StagingTable,
+        TruncateAndReload,
+        PartitionSwitch
     }
 }

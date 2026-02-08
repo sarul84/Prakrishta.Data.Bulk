@@ -1,8 +1,8 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
-
-namespace Prakrishta.Data.Bulk.Helpers
+﻿namespace Prakrishta.Data.Bulk.Helpers
 {
+    using System.Reflection;
+    using System.Reflection.Emit;
+
     public static class IlSetterFactory
     {
         public static Action<object, object?> CreateSetter(PropertyInfo prop)

@@ -1,12 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Prakrishta.Data.Bulk.Internals
+﻿namespace Prakrishta.Data.Bulk.Internals
 {
-    internal class Guard
+    public static class Guard
     {
+        public static void NotNull<T>(T value, string paramName)
+            where T : class
+        {
+            if (value is null)
+                throw new ArgumentNullException(paramName);
+        }
+
+        public static void NotNullOrEmpty(string value, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Value cannot be null or empty.", paramName);
+        }
+
+        public static void Positive(int value, string paramName)
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(paramName, "Value must be positive.");
+        }
     }
 }

@@ -1,7 +1,7 @@
 # Prakrishta.Data.Bulk
-High?performance, extensible bulk operations for .NET. Prakrishta.Data.Bulk is a provider?agnostic, pipeline?based bulk engine designed for speed, flexibility, and testability. It complements Prakrishta.Data by enabling large?scale insert, update, and delete operations with minimal overhead.
+High performance, extensible bulk operations for .NET. Prakrishta.Data.Bulk is a provider agnostic, pipeline based bulk engine designed for speed, flexibility, and testability. It complements Prakrishta.Data by enabling large scale insert, update, and delete operations with minimal overhead.
 
-##Features
+## Features
 
 - Pipeline-based architecture
 Add middleware for diagnostics, batching, logging, or custom behaviors.

@@ -4,11 +4,24 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<Authors>Arul Sengottaiyan</Authors>
+	<Company>Prakrishta Technologies</Company>
+	<Version>1.0.0</Version>
+	<AssemblyVersion>1.0.0.0</AssemblyVersion>
+	<Description>
+		Prakrishta.Data.Bulk is a high‑performance bulk operations library for SQL Server, built for .NET 8. It provides blazing‑fast bulk insert, update, delete, and upsert operations using optimized strategies such as TVP‑based stored procedures, staging tables with MERGE, and raw SqlBulkCopy. Designed for ETL pipelines, data warehousing, and high‑volume ingestion workloads, Prakrishta.Data.Bulk consistently outperforms EFCore.BulkExtensions and approaches the performance of commercial libraries like Z.BulkOperations and Dapper Plus — without reflection, without EF Core overhead, and with predictable linear scaling.
+	</Description>
+	<PackageProjectUrl>https://github.com/sarul84/Prakrishta.Data.Bulk</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/sarul84/Prakrishta.Data.Bulk</RepositoryUrl>
+	<PackageTags>bulk;sql;sqlserver;performance;C#;</PackageTags>
+	<Copyright>Copyright © Prakrishta Technologies 2026</Copyright>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
+	<None Include="..\LICENSE.txt" Pack="true" PackagePath=""/>
+	<None Include="..\README.md" Pack="true" PackagePath="" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.23" />
   </ItemGroup>
-
 </Project>

@@ -22,7 +22,7 @@
         /// <summary>
         /// Applies the configured options to the BulkContext by writing into Properties.
         /// </summary>
-        protected internal void ApplyTo(BulkContext context)
+        internal void ApplyTo(BulkContext context)
         {
             if (context is null)
                 throw new ArgumentNullException(nameof(context));

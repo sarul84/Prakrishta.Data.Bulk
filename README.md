@@ -35,73 +35,155 @@ High performance, extensible bulk operations for .NET. Prakrishta.Data.Bulk is a
 dotnet add package Prakrishta.Data.Bulk
 ```
 
-
 2. Define your entity
 
 ```
-public sealed class Customer
+public sealed class SalesRecord
 {
     public int Id { get; set; }
-    public string Name { get; set; } = default!;
-    public decimal Balance { get; set; }
-    public DateTime CreatedOn { get; set; }
+    public DateTime SaleDate { get; set; }
+    public decimal Amount { get; set; }
 }
 ```
 
-3. Create a bulk engine
-
-Stored Procedure Strategy (Fastest for Inserts)
+3. Create a bulk engine full example
 
 ```
-var engine = BulkEngineFactory.CreateStoredProc(
-    connectionString: "...",
-    storedProcName: "dbo.InsertCustomers"
-);
+var builder = WebApplication.CreateBuilder(args);
+
+// Register Bulk Engine
+builder.Services.AddBulkEngine(opts =>
+{
+    opts.DefaultStrategy = BulkStrategyKind.StoredProcedureTvp;
+});
+
+var app = builder.Build();
+
+// Resolve engine
+var bulk = app.Services.GetRequiredService<BulkEngine>();
+
+// Sample data
+var items = new List<SalesRecord>
+{
+    new() { Id = 1, SaleDate = DateTime.UtcNow, Amount = 100 },
+    new() { Id = 2, SaleDate = DateTime.UtcNow, Amount = 200 }
+};
+
+// Insert
+await bulk.InsertAsync(
+    items,
+    "dbo.Sales",
+    "dbo.SalesType",
+    "dbo.Sales_Insert");
+
+// Partition Switch
+await bulk.ReplacePartitionAsync(
+    items,
+    "dbo.FactSales",
+    opts => opts
+        .UseStagingTable("dbo.FactSales_Staging_7")
+        .ForPartition(7));
+
+app.Run();
 ```
 
-The stored procedure should accept a TVP:
+4. Service Collection Extensions
 
 ```
-CREATE TYPE dbo.CustomerType AS TABLE
+using Microsoft.Extensions.DependencyInjection;
+using Prakrishta.Data.Bulk.Abstractions;
+using Prakrishta.Data.Bulk.Core;
+using Prakrishta.Data.Bulk.Engine.Strategies;
+using Prakrishta.Data.Bulk.Enum;
+
+namespace Prakrishta.Data.Bulk.Extensions;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddBulkEngine(
+        this IServiceCollection services,
+        Action<BulkOptions>? configure = null)
+    {
+        // Options
+        var options = new BulkOptions();
+        configure?.Invoke(options);
+        services.AddSingleton(options);
+
+        // Factories
+        services.AddSingleton<IBulkCopyFactory, SqlBulkCopyFactory>();
+        services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+
+        // Strategy selector
+        services.AddSingleton<IBulkStrategySelector, BulkStrategySelector>();
+
+        // Strategies
+        services.AddSingleton<IBulkStrategy>(sp =>
+            new StoredProcedureTvpStrategy(
+                sp.GetRequiredService<IDbConnectionFactory>()));
+
+        services.AddSingleton<IBulkStrategy>(sp =>
+            new StagingTableStrategy(
+                sp.GetRequiredService<IBulkCopyFactory>(),
+                sp.GetRequiredService<IDbConnectionFactory>()));
+
+        services.AddSingleton<IBulkStrategy>(sp =>
+            new TruncateAndReloadStrategy(
+                sp.GetRequiredService<IBulkCopyFactory>(),
+                sp.GetRequiredService<IDbConnectionFactory>()));
+
+        services.AddSingleton<IBulkStrategy>(sp =>
+            new PartitionSwitchStrategy(
+                sp.GetRequiredService<IBulkCopyFactory>(),
+                sp.GetRequiredService<IDbConnectionFactory>()));
+
+        // Strategy dictionary
+        services.AddSingleton<IDictionary<BulkStrategyKind, IBulkStrategy>>(sp =>
+        {
+            var strategies = sp.GetServices<IBulkStrategy>();
+            return strategies.ToDictionary(s => s.Kind, s => s);
+        });
+
+        // Pipeline
+        services.AddSingleton<IBulkPipeline, BulkPipelineEngine>();
+
+        // Engine
+        services.AddSingleton<BulkEngine>();
+
+        return services;
+    }
+}
+```
+
+5. TVP Type for SalesRecord
+
+```
+CREATE TYPE dbo.SalesType AS TABLE
 (
-    Id INT,
-    Name NVARCHAR(200),
-    Balance DECIMAL(18,2),
-    CreatedOn DATETIME2
+    Id          INT            NOT NULL,
+    SaleDate    DATETIME2(7)   NOT NULL,
+    Amount      DECIMAL(18,2)  NOT NULL
 );
 
-CREATE PROCEDURE dbo.InsertCustomers
-    @Customers dbo.CustomerType READONLY
-AS
-BEGIN
-    INSERT INTO dbo.Customers (Id, Name, Balance, CreatedOn)
-    SELECT Id, Name, Balance, CreatedOn
-    FROM @Customers;
-END
 ```
+✔ Must match your C# entity
+✔ Must match your staging table
+✔ Must NOT include identity or constraints
 
-
-Staging Table Strategy (Best for Upsert/Update/Delete)
+6. Auto‑Drop + Recreate Script
 
 ```
-var engine = BulkEngineFactory.CreateStaging(
-    connectionString: "...",
-    targetTable: "dbo.Customers",
-    keyColumns: new[] { "Id" }
+IF OBJECT_ID('dbo.SalesRecord_Staging', 'U') IS NOT NULL
+    DROP TABLE dbo.SalesRecord_Staging;
+
+CREATE TABLE dbo.SalesRecord_Staging
+(
+    Id          INT            NOT NULL,
+    SaleDate    DATETIME2(7)   NOT NULL,
+    Amount      DECIMAL(18,2)  NOT NULL
 );
-```
 
-4. Execute a bulk insert
-
-```
-await engine.InsertAsync(customers, "dbo.Customers");
-```
-
-
-5. Execute an upsert (staging strategy only)
-
-```
-await engine.UpsertAsync(customers, "dbo.Customers");
+CREATE CLUSTERED INDEX IX_SalesRecord_Staging_Id
+    ON dbo.SalesRecord_Staging (Id);
 ```
 
 

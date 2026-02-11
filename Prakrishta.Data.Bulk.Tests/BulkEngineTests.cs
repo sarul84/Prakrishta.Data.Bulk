@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Prakrishta.Data.Bulk.Core;
 using Prakrishta.Data.Bulk.Pipeline;
+using Prakrishta.Data.Bulk.Tests.TestHelpers;
 
 namespace Prakrishta.Data.Bulk.Tests
 {
@@ -16,7 +17,7 @@ namespace Prakrishta.Data.Bulk.Tests
         [TestMethod]
         public async Task Should_Invoke_Pipeline()
         {
-            var engine = new BulkEngine(new FakePipeline());
+            var engine = new BulkEngine("fake", new FakeDbConnectionFactory(), new FakePipeline());
 
             var result = await engine.UpdateAsync(new[] { 1 }, "dbo.Test");
 
@@ -27,7 +28,7 @@ namespace Prakrishta.Data.Bulk.Tests
         public async Task Insert_Should_Invoke_Pipeline()
         {
             var pipeline = new FakePipeline();
-            var engine = new BulkEngine(pipeline);
+            var engine = new BulkEngine("fake", new FakeDbConnectionFactory(), pipeline);
 
             var result = await engine.InsertAsync(new[] { 1 }, "dbo.Test");
 

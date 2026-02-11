@@ -1,12 +1,26 @@
-﻿using Prakrishta.Data.Bulk.Core;
-using Prakrishta.Data.Bulk.Enum;
-using Prakrishta.Data.Bulk.Pipeline;
-
-namespace Prakrishta.Data.Bulk
+﻿namespace Prakrishta.Data.Bulk
 {
-    public sealed class BulkEngine(IBulkPipeline pipeline)
+    using Prakrishta.Data.Bulk.Abstractions;
+    using Prakrishta.Data.Bulk.Core;
+    using Prakrishta.Data.Bulk.Enum;
+    using Prakrishta.Data.Bulk.Pipeline;
+
+    public sealed class BulkEngine: IBulkEngineInternal
     {
-        private readonly IBulkPipeline _pipeline = pipeline;
+        private readonly IBulkPipeline _pipeline;
+
+        public string ConnectionString { get; }
+        public IDbConnectionFactory ConnectionFactory { get; }
+
+        public BulkEngine(
+            string connectionString, 
+            IDbConnectionFactory connectionFactory,
+            IBulkPipeline pipeline)
+        {
+            ConnectionString = connectionString;
+            ConnectionFactory = connectionFactory;
+            _pipeline = pipeline;
+        }
 
         public Task<int> UpdateAsync<T>(
             IEnumerable<T> items,

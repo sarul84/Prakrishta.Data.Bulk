@@ -4,6 +4,7 @@ using Prakrishta.Data.Bulk.Core;
 using Prakrishta.Data.Bulk.Engine.Strategies;
 using Prakrishta.Data.Bulk.Enum;
 using Prakrishta.Data.Bulk.Factories;
+using Prakrishta.Data.Bulk.Internals;
 using Prakrishta.Data.Bulk.Pipeline;
 using Prakrishta.Data.Bulk.Pipeline.StrategySelector;
 using Prakrishta.Data.Bulk.Strategies;
@@ -12,7 +13,10 @@ namespace Prakrishta.Data.Bulk.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddBulkEngine(this IServiceCollection services, Action<BulkOptions>? configure = null)
+    public static IServiceCollection AddBulkEngine(
+        this IServiceCollection services,
+        string connectionString,
+        Action<BulkOptions>? configure = null)
     {
         var options = new BulkOptions();
         configure?.Invoke(options);
@@ -22,6 +26,13 @@ public static class ServiceCollectionExtensions
         // Factories
         services.AddSingleton<IBulkCopyFactory, SqlBulkCopyFactory>();
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+
+        // Register schema resolver
+        services.AddSingleton<ISchemaResolver>(sp =>
+        {
+            var factory = sp.GetRequiredService<IDbConnectionFactory>();
+            return new SchemaResolver(factory, connectionString);
+        });
 
         // Strategy selector
         services.AddSingleton<BulkStrategySelector>();
@@ -58,8 +69,14 @@ public static class ServiceCollectionExtensions
         // Pipeline
         services.AddSingleton<IBulkPipeline, BulkPipelineEngine>();
 
-        // Engine
-        services.AddSingleton<BulkEngine>();
+        // Register BulkEngine
+        services.AddSingleton<BulkEngine>(sp =>
+        {
+            var factory = sp.GetRequiredService<IDbConnectionFactory>();
+            var pipeline = sp.GetRequiredService<IBulkPipeline>();
+            return new BulkEngine(connectionString, factory, pipeline);
+        });
+
 
         return services;
     }

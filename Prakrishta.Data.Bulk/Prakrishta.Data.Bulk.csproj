@@ -19,8 +19,16 @@
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
-  <ItemGroup>
-	<None Include="..\LICENSE.txt" Pack="true" PackagePath=""/>
+	<ItemGroup>
+		<InternalsVisibleTo Include="Prakrishta.Data.Bulk.Tests" />
+		
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Prakrishta.Data.Bulk</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
+	<None Include="..\LICENSE.txt" Pack="true" PackagePath="" />
 	<None Include="..\README.md" Pack="true" PackagePath="" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
   </ItemGroup>

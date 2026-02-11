@@ -6,6 +6,7 @@
     using Prakrishta.Data.Bulk.Extensions;
     using Prakrishta.Data.Bulk.Mapping;
     using Prakrishta.Data.Bulk.Pipeline;
+    using Prakrishta.Data.Bulk.Tests.TestHelpers;
 
     [TestClass]
     public class BulkEnginePartitionExtensionsTests
@@ -21,7 +22,7 @@
                 return Task.FromResult(ctx.ItemCount);
             });
 
-            var engine = new BulkEngine(pipeline);
+            var engine = new BulkEngine("fake", new FakeDbConnectionFactory(), pipeline);
 
             var items = new[]
             {

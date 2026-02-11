@@ -90,31 +90,31 @@ app.Run();
 4. Service Collection Extensions
 
 ```
-using Microsoft.Extensions.DependencyInjection;
-using Prakrishta.Data.Bulk.Abstractions;
-using Prakrishta.Data.Bulk.Core;
-using Prakrishta.Data.Bulk.Engine.Strategies;
-using Prakrishta.Data.Bulk.Enum;
-
-namespace Prakrishta.Data.Bulk.Extensions;
-
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddBulkEngine(
         this IServiceCollection services,
+        string connectionString,
         Action<BulkOptions>? configure = null)
     {
-        // Options
         var options = new BulkOptions();
         configure?.Invoke(options);
+
         services.AddSingleton(options);
 
         // Factories
         services.AddSingleton<IBulkCopyFactory, SqlBulkCopyFactory>();
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
+        // Register schema resolver
+        services.AddSingleton<ISchemaResolver>(sp =>
+        {
+            var factory = sp.GetRequiredService<IDbConnectionFactory>();
+            return new SchemaResolver(factory, connectionString);
+        });
+
         // Strategy selector
-        services.AddSingleton<IBulkStrategySelector, BulkStrategySelector>();
+        services.AddSingleton<BulkStrategySelector>();
 
         // Strategies
         services.AddSingleton<IBulkStrategy>(sp =>
@@ -123,11 +123,13 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IBulkStrategy>(sp =>
             new StagingTableStrategy(
+                sp.GetRequiredService<BulkOptions>(),
                 sp.GetRequiredService<IBulkCopyFactory>(),
                 sp.GetRequiredService<IDbConnectionFactory>()));
 
         services.AddSingleton<IBulkStrategy>(sp =>
             new TruncateAndReloadStrategy(
+                sp.GetRequiredService<BulkOptions>(),
                 sp.GetRequiredService<IBulkCopyFactory>(),
                 sp.GetRequiredService<IDbConnectionFactory>()));
 
@@ -146,8 +148,14 @@ public static class ServiceCollectionExtensions
         // Pipeline
         services.AddSingleton<IBulkPipeline, BulkPipelineEngine>();
 
-        // Engine
-        services.AddSingleton<BulkEngine>();
+        // Register BulkEngine
+        services.AddSingleton<BulkEngine>(sp =>
+        {
+            var factory = sp.GetRequiredService<IDbConnectionFactory>();
+            var pipeline = sp.GetRequiredService<IBulkPipeline>();
+            return new BulkEngine(connectionString, factory, pipeline);
+        });
+
 
         return services;
     }

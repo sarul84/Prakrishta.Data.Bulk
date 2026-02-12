@@ -1,4 +1,5 @@
-﻿using Prakrishta.Data.Bulk.Core;
+﻿using Prakrishta.Data.Bulk.Attributes;
+using Prakrishta.Data.Bulk.Core;
 using Prakrishta.Data.Bulk.Helpers;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -50,6 +51,20 @@ public static class ColumnMapCache
 
         foreach (var prop in props)
         {
+            // 1. Ignore attribute
+            if (prop.GetCustomAttribute<BulkIgnoreAttribute>() != null)
+                continue;
+
+            // 2. Column name override
+            var colAttr = prop.GetCustomAttribute<BulkColumnAttribute>();
+            var columnName = colAttr?.ColumnName ?? prop.Name;
+
+            // 3. Key override
+            var isKey =
+                prop.GetCustomAttribute<BulkKeyAttribute>() != null ||
+                prop.Name.Equals("Id", StringComparison.OrdinalIgnoreCase);
+
+            // 4. Getter
             var getter = IlGetterFactory.CreateGetter(prop);
 
             maps.Add(new ColumnMap
@@ -57,7 +72,7 @@ public static class ColumnMapCache
                 ColumnName = prop.Name,
                 ColumnType = prop.PropertyType,
                 Getter = getter,
-                IsKey = prop.Name.Equals("Id", StringComparison.OrdinalIgnoreCase)
+                IsKey = isKey
             });
         }
 

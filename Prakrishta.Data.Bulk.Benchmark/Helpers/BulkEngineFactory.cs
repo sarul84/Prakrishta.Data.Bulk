@@ -1,6 +1,4 @@
-using Microsoft.Data.SqlTypes;
 using Prakrishta.Data.Bulk;
-using Prakrishta.Data.Bulk.Benchmark;
 using Prakrishta.Data.Bulk.Core;
 using Prakrishta.Data.Bulk.Diagnostics;
 using Prakrishta.Data.Bulk.Factories;
@@ -39,7 +37,7 @@ public static class BulkEngineFactory
 
         var pipeline = new BulkPipelineEngine(steps);
 
-        return new BulkEngine(pipeline);
+        return new BulkEngine(connectionString, connectionFactory, pipeline);
     }
 
     public static BulkEngine CreateTruncateOnly(string connectionString)
@@ -63,7 +61,7 @@ public static class BulkEngineFactory
 
         var pipeline = new BulkPipelineEngine(steps);
 
-        return new BulkEngine(pipeline);
+        return new BulkEngine(connectionString, connectionFactory, pipeline);
     }
 
 }

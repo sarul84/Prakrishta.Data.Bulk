@@ -3,6 +3,7 @@
 using Prakrishta.Data.Bulk;
 using Prakrishta.Data.Bulk.Abstractions;
 using Prakrishta.Data.Bulk.Core;
+using Prakrishta.Data.Bulk.Helpers;
 using Prakrishta.Data.Bulk.Internals;
 
 public sealed class BulkEntityBuilder<T>
@@ -68,6 +69,10 @@ public sealed class BulkEntityBuilder<T>
         if (_schema != null)
             return _schema;
 
+        var attrSchema = BulkAttributeResolver.GetSchema<T>();
+        if (attrSchema != null)
+            return attrSchema;
+
         if (_tableName?.Contains('.') == true)
             return _tableName.Split('.')[0];
 
@@ -79,8 +84,16 @@ public sealed class BulkEntityBuilder<T>
         if (_tableName != null)
             return _tableName;
 
-        var schema = await ResolveSchemaAsync(ct);
-        return $"{schema}.{typeof(T).Name}";
+        var attrTable = BulkAttributeResolver.GetTableName<T>();
+        if (attrTable != null)
+        {
+            var schema = await ResolveSchemaAsync(ct);
+            return $"{schema}.{attrTable}";
+        }
+
+
+        var schema2 = await ResolveSchemaAsync(ct);
+        return $"{schema2}.{typeof(T).Name}";
     }
 
     private async Task<string> ResolveTvpNameAsync(CancellationToken ct)
@@ -88,8 +101,15 @@ public sealed class BulkEntityBuilder<T>
         if (_tvpName != null)
             return _tvpName;
 
-        var schema = await ResolveSchemaAsync(ct);
-        return $"{schema}.{typeof(T).Name}Type";
+        var attrTvp = BulkAttributeResolver.GetTvpName<T>();
+        if (attrTvp != null)
+        {
+            var schema = await ResolveSchemaAsync(ct);
+            return $"{schema}.{attrTvp}";
+        }
+
+        var schema2 = await ResolveSchemaAsync(ct);
+        return $"{schema2}.{typeof(T).Name}Type";
     }
 
     private async Task<string> ResolveProcedureNameAsync(string op, CancellationToken ct)
@@ -97,10 +117,21 @@ public sealed class BulkEntityBuilder<T>
         if (_procedureName != null)
             return _procedureName;
 
-        var schema = await ResolveSchemaAsync(ct);
-        return $"{schema}.{typeof(T).Name}_{op}";
-    }
+        string? attr =
+            op == "Insert" ? BulkAttributeResolver.GetInsertProcedure<T>() :
+            op == "Update" ? BulkAttributeResolver.GetUpdateProcedure<T>() :
+            op == "Delete" ? BulkAttributeResolver.GetDeleteProcedure<T>() :
+            null;
 
+        if (attr != null)
+        {
+            var schema = await ResolveSchemaAsync(ct);
+            return $"{schema}.{attr}";
+        }
+
+        var schema2 = await ResolveSchemaAsync(ct);
+        return $"{schema2}.{typeof(T).Name}_{op}";
+    }
 
     public async Task<int> InsertAsync(IEnumerable<T> items, CancellationToken ct = default)
     {

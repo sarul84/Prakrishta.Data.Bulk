@@ -194,7 +194,6 @@ CREATE CLUSTERED INDEX IX_SalesRecord_Staging_Id
     ON dbo.SalesRecord_Staging (Id);
 ```
 
-
 ## Performance Benchmarks
 
 | Rows |Prakrishta (Stored Proc) | Prakrishta (Staging) | Raw Sql | EFCore.BulkExtensions | Result |
@@ -344,6 +343,130 @@ Great baseline — and your strategies outperform it at scale.
 ![Performance](https://img.shields.io/badge/Performance-2×%20Faster%20Than%20EFCore.BulkExtensions-brightgreen?style=for-the-badge)
 ![Speed](https://img.shields.io/badge/50k%20Insert-188ms-success?style=for-the-badge)
 ![Benchmark Winner](https://img.shields.io/badge/Benchmark%20Winner-Yes!-brightgreen?style=for-the-badge)
+
+## Attribute‑Based Configuration
+The Bulk Engine supports strongly‑typed attributes that allow you to configure schema, table names, TVP names, stored procedures, and column mappings directly on your entity classes. This provides a clean, declarative alternative to fluent configuration and integrates seamlessly with automatic schema discovery.
+Attributes are optional — the engine continues to work with conventions and fluent overrides.
+
+### Why Use Attributes?
+Attributes allow you to:
+- Keep configuration close to your entity model
+- Avoid repeating table/TVP/procedure names in multiple places
+- Override conventions without using fluent API
+- Disable automatic schema discovery when schema is explicitly defined
+- Customize column names or ignore properties
+- Mark key columns explicitly
+
+They also follow a clear precedence model:
+
+Precedence Order (Highest → Lowest)
+- Fluent API overrides
+- Attributes
+- Automatic schema discovery
+- Conventions (dbo.TableName, property name)
+
+### Property‑Level Attributes
+
+Column Rename
+
+```
+[BulkColumn("CustomerName")]
+public string Name { get; set; }
+```
+
+Maps the property to a different column name.
+
+Ignore Property
+
+```
+[BulkIgnore]
+public string TempValue { get; set; }
+```
+
+Ignored during:
+- Insert
+- Update
+- Delete
+- TVP generation
+- Partition switch staging
+
+Explicit Key
+
+```
+[BulkKey]
+public Guid CustomerId { get; set; }
+```
+
+Overrides the default "Id" convention.
+
+### How Attributes Interact with Fluent API
+Attributes provide defaults, but fluent API always wins:
+
+```
+[BulkSchema("sales")]
+[BulkTable("Customer")]
+public class Customer { ... }
+
+await bulk
+    .For<Customer>()
+    .ToTable("custom.Customers")   // overrides attribute
+    .InsertAsync(items);
+```
+Final table name:
+custom.Customers
+
+
+
+### How Attributes Interact with Schema Discovery
+If schema is not provided via:
+- .InSchema("...")
+- [BulkSchema("...")]
+- .ToTable("schema.Table")
+- 
+Then the engine automatically discovers the schema from the database:
+
+```
+SELECT TABLE_SCHEMA
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_NAME = 'Customer'
+```
+
+If multiple schemas contain the same table, the engine throws a clear error and instructs the user to specify a schema explicitly.
+
+### Example Entity Using All Attributes
+
+```
+[BulkSchema("sales")]
+[BulkTable("Customer")]
+[BulkTvp("CustomerType")]
+[BulkInsertProcedure("Customer_Insert")]
+[BulkUpdateProcedure("Customer_Update")]
+[BulkDeleteProcedure("Customer_Delete")]
+public class Customer
+{
+    [BulkKey]
+    public int CustomerId { get; set; }
+
+    [BulkColumn("CustomerName")]
+    public string Name { get; set; }
+
+    [BulkIgnore]
+    public string TempValue { get; set; }
+}
+```
+
+Usage:
+
+```
+await bulk.For<Customer>().InsertAsync(customers);
+```
+
+
+Everything resolves automatically:
+- Table → sales.Customer
+- TVP → sales.CustomerType
+- Insert SP → sales.Customer_Insert
+- Column map → { CustomerId, CustomerName }
 
 
 ## License

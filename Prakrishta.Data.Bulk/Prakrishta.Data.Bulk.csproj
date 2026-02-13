@@ -31,5 +31,7 @@
 	<None Include="..\LICENSE.txt" Pack="true" PackagePath="" />
 	<None Include="..\README.md" Pack="true" PackagePath="" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
   </ItemGroup>
 </Project>

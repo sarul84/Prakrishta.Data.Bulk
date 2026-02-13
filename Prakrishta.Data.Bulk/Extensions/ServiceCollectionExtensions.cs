@@ -1,21 +1,25 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+namespace Prakrishta.Data.Bulk.Extensions;
+
 using Prakrishta.Data.Bulk.Abstractions;
 using Prakrishta.Data.Bulk.Core;
 using Prakrishta.Data.Bulk.Engine.Strategies;
 using Prakrishta.Data.Bulk.Enum;
 using Prakrishta.Data.Bulk.Factories;
+using Prakrishta.Data.Bulk.Helpers;
 using Prakrishta.Data.Bulk.Internals;
 using Prakrishta.Data.Bulk.Pipeline;
 using Prakrishta.Data.Bulk.Pipeline.StrategySelector;
 using Prakrishta.Data.Bulk.Strategies;
-
-namespace Prakrishta.Data.Bulk.Extensions;
 
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddBulkEngine(
         this IServiceCollection services,
         string connectionString,
+        IConfiguration configuration,
         Action<BulkOptions>? configure = null)
     {
         var options = new BulkOptions();
@@ -26,6 +30,15 @@ public static class ServiceCollectionExtensions
         // Factories
         services.AddSingleton<IBulkCopyFactory, SqlBulkCopyFactory>();
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+
+        services.Configure<ConnectionPoolingOptions>(configuration.GetSection("BulkEngine:ConnectionPooling"));
+
+        services.AddSingleton<IDbConnectionFactory>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<ConnectionPoolingOptions>>().Value;
+            var baseFactory = new SqlConnectionFactory();
+            return new PooledConnectionFactory(baseFactory, opts.MaxPoolSize);
+        });
 
         // Register schema resolver
         services.AddSingleton<ISchemaResolver>(sp =>

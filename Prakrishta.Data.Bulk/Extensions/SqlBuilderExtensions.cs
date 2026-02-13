@@ -1,4 +1,4 @@
-﻿namespace Prakrishta.Data.Bulk.Internals
+﻿namespace Prakrishta.Data.Bulk.Extensions
 {
     using Microsoft.Data.SqlClient;
     using System.Data;

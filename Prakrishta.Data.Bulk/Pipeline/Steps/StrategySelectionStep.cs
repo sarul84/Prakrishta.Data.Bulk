@@ -4,18 +4,14 @@
     using Prakrishta.Data.Bulk.Diagnostics;
     using Prakrishta.Data.Bulk.Pipeline.StrategySelector;
 
-    public sealed class StrategySelectionStep : IBulkPipelineStep
+    public sealed class StrategySelectionStep(
+        BulkStrategySelector selector
+        , IBulkDiagnosticsSink diagnostics) : IBulkPipelineStep
     {
-        private readonly BulkStrategySelector _selector;
-        private readonly IBulkDiagnosticsSink _diagnostics;
+        private readonly BulkStrategySelector _selector = selector;
+        private readonly IBulkDiagnosticsSink _diagnostics = diagnostics;
 
         public string Name => "StrategySelection";
-
-        public StrategySelectionStep(BulkStrategySelector selector, IBulkDiagnosticsSink diagnostics)
-        {
-            _selector = selector;
-            _diagnostics = diagnostics;
-        }
 
         public Task ExecuteAsync(BulkContext context, CancellationToken cancellationToken)
         {

@@ -2,7 +2,7 @@
 {
     using FluentAssertions;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Prakrishta.Data.Bulk.Internals;
+    using Prakrishta.Data.Bulk.Extensions;
     using Prakrishta.Data.Bulk.Tests.TestHelpers;
     using System.Data;
 

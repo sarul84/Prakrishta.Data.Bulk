@@ -1,4 +1,4 @@
-﻿namespace Prakrishta.Data.Bulk.Internals
+﻿namespace Prakrishta.Data.Bulk.Extensions
 {
     public static class TypeExtensions
     {

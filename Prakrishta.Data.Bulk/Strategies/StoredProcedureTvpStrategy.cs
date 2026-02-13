@@ -4,9 +4,10 @@
     using Prakrishta.Data.Bulk.Core;
     using Prakrishta.Data.Bulk.Enum;
     using Prakrishta.Data.Bulk.Extensions;
-    using Prakrishta.Data.Bulk.Internals;
+    using Prakrishta.Data.Bulk.Factories;
     using Prakrishta.Data.Bulk.Mapping;
     using System.Data;
+    using System.Data.Common;
 
     public sealed class StoredProcedureTvpStrategy(IDbConnectionFactory connectionFactory) : IBulkStrategy
     {
@@ -29,21 +30,36 @@
 
             var table = list.ToDataTable(maps);
 
-            await using var conn = _connectionFactory.Create(connectionString);
-            await conn.OpenAsync(cancellationToken);
+            DbConnection conn = null;
 
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = context.ProcedureName;
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            if (cmd.Parameters is Microsoft.Data.SqlClient.SqlParameterCollection sqlParameters)
+            try
             {
-                sqlParameters.AddWithValue("@Items", table);
+                conn = _connectionFactory.Create(connectionString);
+                await conn.OpenAsync(cancellationToken);
+
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = context.ProcedureName;
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                if (cmd.Parameters is Microsoft.Data.SqlClient.SqlParameterCollection sqlParameters)
+                {
+                    sqlParameters.AddWithValue("@Items", table);
+                }
+
+                cmd.AddStructured("@Items", table, context.TableTypeName);
+
+                return await cmd.ExecuteNonQueryAsync(cancellationToken);
             }
-
-            cmd.AddStructured("@Items", table, context.TableTypeName);
-
-            return await cmd.ExecuteNonQueryAsync(cancellationToken);
+            finally
+            {
+                if (conn != null)
+                {
+                    if (_connectionFactory is PooledConnectionFactory pooled)
+                        pooled.Return(conn);
+                    else
+                        await conn.DisposeAsync();
+                }
+            }
         }
     }
 }

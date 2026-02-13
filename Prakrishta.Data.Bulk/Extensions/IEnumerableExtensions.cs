@@ -1,6 +1,5 @@
 ﻿namespace Prakrishta.Data.Bulk.Extensions
 {
-    using Prakrishta.Data.Bulk.Internals;
     using Prakrishta.Data.Bulk.Mapping;
     using System.Data;
 

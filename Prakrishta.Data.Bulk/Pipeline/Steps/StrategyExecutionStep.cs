@@ -3,20 +3,14 @@
     using Prakrishta.Data.Bulk.Core;
     using Prakrishta.Data.Bulk.Enum;
 
-    public sealed class StrategyExecutionStep : IBulkPipelineStep
+    public sealed class StrategyExecutionStep(
+        IEnumerable<IBulkStrategy> strategies,
+        string connectionString) : IBulkPipelineStep
     {
-        private readonly IReadOnlyDictionary<BulkStrategyKind, IBulkStrategy> _strategies;
-        private readonly string _connectionString;
+        private readonly IReadOnlyDictionary<BulkStrategyKind, IBulkStrategy> _strategies = strategies.ToDictionary(s => s.Kind);
+        private readonly string _connectionString = connectionString;
 
         public string Name => "StrategyExecution";
-
-        public StrategyExecutionStep(
-            IEnumerable<IBulkStrategy> strategies,
-            string connectionString)
-        {
-            _strategies = strategies.ToDictionary(s => s.Kind);
-            _connectionString = connectionString;
-        }
 
         public async Task ExecuteAsync(BulkContext context, CancellationToken cancellationToken)
         {

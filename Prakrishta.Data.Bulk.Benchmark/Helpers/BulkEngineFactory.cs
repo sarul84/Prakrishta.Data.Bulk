@@ -54,9 +54,8 @@ public static class BulkEngineFactory
 
         var steps = new IBulkPipelineStep[]
         {
-        new MaterializationStep(),
-
-        new DirectExecutionStep(truncate, connectionString)
+            new MaterializationStep(),
+            new DirectExecutionStep(truncate, connectionString)
         };
 
         var pipeline = new BulkPipelineEngine(steps);

@@ -3,8 +3,10 @@ using Prakrishta.Data.Bulk.Abstractions;
 using Prakrishta.Data.Bulk.Core;
 using Prakrishta.Data.Bulk.Enum;
 using Prakrishta.Data.Bulk.Extensions;
+using Prakrishta.Data.Bulk.Factories;
 using Prakrishta.Data.Bulk.Helpers;
 using Prakrishta.Data.Bulk.Mapping;
+using System.Data.Common;
 
 namespace Prakrishta.Data.Bulk.Engine.Strategies;
 
@@ -68,15 +70,31 @@ public sealed class PartitionSwitchStrategy : IBulkStrategy
     {
         var table = items.ToDataTable(columnMaps);
 
-        var conn = _connectionFactory.Create(connectionString);
+        DbConnection conn = null;
 
-        await using var bulk = _bulkCopyFactory.Create(conn);
-        bulk.DestinationTableName = stagingTable;
+        try
+        {
+            conn = _connectionFactory.Create(connectionString);
 
-        foreach (var map in columnMaps)
-            bulk.ColumnMappings.Add((map.ColumnName, map.ColumnName));
+            await using var bulk = _bulkCopyFactory.Create(conn);
+            bulk.DestinationTableName = stagingTable;
 
-        await bulk.WriteToServerAsync(table, cancellationToken);
+            foreach (var map in columnMaps)
+                bulk.ColumnMappings.Add((map.ColumnName, map.ColumnName));
+
+            await bulk.WriteToServerAsync(table, cancellationToken);
+        }
+        finally
+        {
+            if (conn != null)
+            {
+                if (_connectionFactory is PooledConnectionFactory pooled)
+                    pooled.Return(conn);
+                else
+                    await conn.DisposeAsync();
+            }
+            await conn.DisposeAsync();
+        }
     }
 
     private async Task CreateStagingTableAsync(
